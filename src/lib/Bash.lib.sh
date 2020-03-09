@@ -20,9 +20,9 @@ function Bash::trapError() {
 
     # Output debug data if in Cron mode
     # printCronDiagnosticsOrSkip 
-    if [[ -n ${cron-} ]]; then
+    # shellcheck disable=SC2154
+    if [[ -n "${Bash::CRON-}" ]]; then
         # Restore original file output descriptors
-        # shellcheck disable=SC2154
         if [[ -n "${Bash::SCRIPT_OUTPUT-}" ]]; then
             exec 1>&3 2>&4
         fi
@@ -57,6 +57,7 @@ function Bash::trapError() {
     exit $((exitCode))
 }
 
+
 # DESC: Handler for exiting the script
 # ARGS: None
 # OUTS: None
@@ -64,7 +65,7 @@ function Bash::trapExit() {
     cd "$ORIG_CWD"
 
     # Remove Cron mode script log
-    if [[ -n ${cron-} && -f ${Bash::SCRIPT_OUTPUT-} ]]; then
+    if [[ -n ${Bash::CRON-} && -f ${Bash::SCRIPT_OUTPUT-} ]]; then
         rm "${Bash::SCRIPT_OUTPUT}"
     fi
 
@@ -76,6 +77,7 @@ function Bash::trapExit() {
     # Restore terminal colors
     printf '%b' "$ta_none"
 }
+
 
 # DESC: Exit script with the given message
 # ARGS: $1 (required): Message to print on exit
@@ -105,18 +107,17 @@ function Bash::scriptExit() {
 }
 
 
-
-
 # DESC: Initialise Cron mode
 # ARGS: None
 # OUTS: $Bash::SCRIPT_OUTPUT: Path to the file stdout & stderr was redirected to
 function Bash::cronInit() {
-    if [[ -n ${cron-} ]]; then
+    if [[ -n ${Bash::CRON-} ]]; then
         # Redirect all output to a temporary file
         readonly Bash::SCRIPT_OUTPUT="$(mktemp --tmpdir "$SCRIPT_NAME".XXXXX)"
         exec 3>&1 4>&2 1> "${Bash::SCRIPT_OUTPUT}" 2>&1
     fi
 }
+
 
 # DESC: Acquire script lock
 # ARGS: $1 (optional): Scope of script execution lock (system or user)

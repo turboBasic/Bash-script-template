@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+Std::NO_COLOR=
+
 
 # shellcheck disable=SC2034
 function Std::setAnsiCodeOrNull() {
@@ -23,11 +25,11 @@ function Std::setAnsiCodeOrNull() {
 # ARGS: None
 # OUTS: Read-only variables with ANSI control codes
 # NOTE: If --no-color was set the variables will be empty
-# shellcheck disable=SC2034
+# shellcheck disable=SC2034,SC2154
 function Std::initColors() {
     readonly ta_none="$(tput sgr0 2> /dev/null || true)"
 
-    if [[ -n ${no_color-} ]] 
+    if [[ -n "${Std::NO_COLOR-}" ]] 
     then
         local empty=empty
     else
@@ -105,7 +107,7 @@ function Std::prettyPrint() {
         Bash::scriptExit 'Missing required argument to Std::prettyPrint()!' 2
     fi
 
-    if [[ -z ${no_color-} ]]; then
+    if [[ -z ${Std::NO_COLOR-} ]]; then
         if [[ -n ${2-} ]]; then
             printf '%b' "$2"
         else

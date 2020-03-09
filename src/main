@@ -36,7 +36,7 @@ function die() {
 #       You can use a tool like realpath to obtain the "true" path. The same
 #       caveat applies to both the $SCRIPT_DIR and $SCRIPT_NAME variables.
 # shellcheck disable=SC2034
-function _init() {
+function main::init() {
     # Useful paths
     readonly ORIG_CWD="$PWD"
     readonly SCRIPT_PATH="${BASH_SOURCE[0]}"
@@ -64,7 +64,7 @@ function _init() {
 # DESC: Usage help
 # ARGS: None
 # OUTS: None
-function _usage() {
+function main::usage() {
     cat <<- EOF
 		Usage:
 		    -h|--help                  Displays this help
@@ -77,27 +77,28 @@ function _usage() {
 # DESC: Arguments parser
 # ARGS: $@ (optional): Arguments provided to the script
 # OUTS: Variables indicating command-line parameters and options
-function _parseArguments() {
+function main::parseArguments() {
     local param
-    no_color=
-    
+    VERBOSE=
+    Std::NO_COLOR=
+
     while [[ $# -gt 0 ]]
     do
         param="$1"
         shift
         case $param in
             -h | --help)
-                _usage
+                main::usage
                 exit 0
                 ;;
             -v | --verbose)
-                verbose=true
+                VERBOSE=true
                 ;;
             -m | --no-color)
-                no_color=true
+                Std::NO_COLOR=true
                 ;;
             -c | --cron)
-                cron=true
+                Bash::CRON=true
                 ;;
             *)
                 Bash::scriptExit "Invalid parameter was provided: $param" 1
@@ -111,14 +112,13 @@ function _parseArguments() {
 # ARGS: $@ (optional): Arguments provided to the script
 # OUTS: None
 function main() {
-    _init "$@" || die 'Cannot initialize script'
+    main::init "$@" || die 'Cannot initialize script'
 
     Std::initColors
-    _parseArguments "$@"
+    main::parseArguments "$@"
     Bash::cronInit
-    #lock_init system
-
-    asdasdasdasdasd
+    # Bash::lockInit system
+    [[ -n "$VERBOSE" ]] && printf '%s\n' "Verbose mode on"
 }
 
 
