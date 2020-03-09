@@ -3,8 +3,11 @@
     // See: https://github.com/editorconfig/editorconfig-vscode/issues/153
     "files.trimTrailingWhitespace": false,
 
-    // File paths to language mappings
     "files.associations": {
-        ".shellcheckrc": "properties"
+        "/src/main": "shellscript",
+    },
+    "projectTemplates.placeholders": {
+        "author" : "Author",
+        "company": "Company"
     }
 }

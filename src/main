@@ -1,0 +1,127 @@
+#!/usr/bin/env bash
+
+# Cheatsheets:
+#   https://devhints.io/bash
+
+# A better class of script...
+#set -o errexit          # Exit on most errors (see the manual)
+set -o errtrace         # Make sure any error trap is inherited
+#set -o nounset          # Disallow expansion of unset variables
+set -o pipefail         # Use last non-zero exit code in a pipeline
+[[ -n "$DEBUG" ]] && set -o xtrace          # Trace the execution of the script (debug)
+
+
+# Arguments:
+# 1: exit_message as string
+# 2: exitCode as int, optional, default: 1
+function die() {
+    local exitCode="${2: -1}"
+    printf 'Error: %s\n' "$1" >&2
+    exit $((exitCode))
+}
+
+
+# DESC: Generic script initialisation
+# ARGS: $@ (optional): Arguments provided to the script
+# OUTS: $ORIG_CWD: The current working directory when the script was run
+#       $SCRIPT_PATH: The full path to the script
+#       $SCRIPT_PATH_RESOLVED: The full path to the script with resolved symlinks
+#       $SCRIPT_DIR: The directory path of the script
+#       $SCRIPT_DIR_RESOLVED: Absolute directory path of the script with resolved symlinks
+#       $SCRIPT_NAME: The file name of the script
+#       $SCRIPT_ARGS: The original parameters provided to the script
+#       $ta_none: The ANSI control code to reset all text attributes
+# NOTE: $SCRIPT_PATH only contains the path that was used to call the script
+#       and will not resolve any symlinks which may be present in the path.
+#       You can use a tool like realpath to obtain the "true" path. The same
+#       caveat applies to both the $SCRIPT_DIR and $SCRIPT_NAME variables.
+# shellcheck disable=SC2034
+function _init() {
+    # Useful paths
+    readonly ORIG_CWD="$PWD"
+    readonly SCRIPT_PATH="${BASH_SOURCE[0]}"
+    readonly SCRIPT_PATH_RESOLVED="$(realpath --physical "$SCRIPT_PATH")"
+    readonly SCRIPT_DIR="$(dirname "$SCRIPT_PATH")"
+    readonly SCRIPT_DIR_RESOLVED="$(dirname "$SCRIPT_PATH_RESOLVED")"
+    readonly LIB_DIR_RESOLVED="$(realpath --physical "$SCRIPT_DIR_RESOLVED/lib")"
+    readonly SCRIPT_NAME="$(basename "$SCRIPT_PATH")"
+    readonly SCRIPT_NAME_RESOLVED="$(realpath --no-symlinks --relative-to="$SCRIPT_DIR" "$SCRIPT_NAME")"
+    readonly -a SCRIPT_ARGS=("$@")
+
+    local lib
+    for lib in Bash.lib.sh System.lib.sh Std.lib.sh
+    do
+        # shellcheck source=/dev/null
+        source "$LIB_DIR_RESOLVED/$lib" || die "Cannot load $LIB_DIR_RESOLVED/lib/$lib"
+    done
+
+    trap Bash::trapError ERR
+    trap Bash::trapExit EXIT
+}
+
+
+
+# DESC: Usage help
+# ARGS: None
+# OUTS: None
+function _usage() {
+    cat <<- EOF
+		Usage:
+		    -h|--help                  Displays this help
+		    -v|--verbose               Displays verbose output
+		    -m|--no-color              Disables color output
+		    -c|--cron                  Run silently unless we encounter an error
+	EOF
+}
+
+# DESC: Arguments parser
+# ARGS: $@ (optional): Arguments provided to the script
+# OUTS: Variables indicating command-line parameters and options
+function _parseArguments() {
+    local param
+    no_color=
+    
+    while [[ $# -gt 0 ]]
+    do
+        param="$1"
+        shift
+        case $param in
+            -h | --help)
+                _usage
+                exit 0
+                ;;
+            -v | --verbose)
+                verbose=true
+                ;;
+            -m | --no-color)
+                no_color=true
+                ;;
+            -c | --cron)
+                cron=true
+                ;;
+            *)
+                Bash::scriptExit "Invalid parameter was provided: $param" 1
+                ;;
+        esac
+    done
+}
+
+
+# DESC: Main control flow
+# ARGS: $@ (optional): Arguments provided to the script
+# OUTS: None
+function main() {
+    _init "$@" || die 'Cannot initialize script'
+
+    Std::initColors
+    _parseArguments "$@"
+    Bash::cronInit
+    #lock_init system
+
+    asdasdasdasdasd
+}
+
+
+main "$@"
+
+# vim: syntax=sh cc=80 tw=79 ts=4 sw=4 sts=4 et sr
